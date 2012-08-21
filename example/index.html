@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style type="text/css">
+            #map-info-container #map{
+                height: 100%;
+                width: 100%;
+                background-color: white;
+            }
+            #controls .visible-layer a:link{
+                color: 'black';
+            }
+            #controls .hidden-layer a:link{
+                color: 'red';
+            }
+            #map-info-container{
+                height: 100%;
+                width: 100%;
+                position: absolute;
+            }
+            #map-info-container #info{
+                width: 25%;
+                right: 0;
+                position: absolute;
+                z-index: 2;
+            }
+        </style>
+        
+        <link rel="stylesheet" href="leaflet.0.3.1/leaflet.css" />
+        <link rel='stylesheet' href="jquery-ui-1.8.19.custom/css/smoothness/jquery-ui-1.8.19.custom.css"/>
+        <script type="text/javascript" src="jquery-ui-1.8.19.custom/js/jquery-1.7.1.min.js"></script>
+        <script type="text/javascript" src="jquery-ui-1.8.19.custom/js/jquery-ui-1.8.19.custom.min.js"></script>
+        <script type="text/javascript" src="leaflet.0.3.1/leaflet-src.js"></script>
+        <script type="text/javascript" src="wax.leaf.min.js"></script>
+        <script type="text/javascript" src="underscore-min.js"></script>
+        <script type="text/javascript" src="../layer-interaction.js"></script>
+        <script type="text/javascript">
+            var baseTiles = {
+                tilejson: "1.0.0",
+                scheme: "tms",
+                tiles: ["http://localhost:8000/static/background/1.0.0/radiation/{z}/{x}/{y}.png"]
+            };
+            var irTiles = {
+                tilejson: "1.0.0",
+                scheme: "tms",
+                template: "{{#__location__}}{{/__location__}}{{#__teaser__}}{{{id}}} {{{type}}}{{/__teaser__}}{{#__full__}}{{/__full__}}", 
+                tiles: ["http://localhost:8000/static/irradiated/1.0.0/radiation/{z}/{x}/{y}.png"],
+                grids: ['http://localhost:8000/static/irradiated/1.0.0/radiation/{z}/{x}/{y}.grid.json']
+            };
+            var newIdTiles = {
+                tilejson: "1.0.0",
+                scheme: "tms",
+                template: "{{#__location__}}{{/__location__}}{{#__teaser__}}{{{id}}} {{{type}}}{{/__teaser__}}{{#__full__}}{{/__full__}}", 
+                tiles: ["http://localhost:8000/static/newid2/1.0.0/radiation/{z}/{x}/{y}.png"],
+                grids: ['http://localhost:8000/static/newid2/1.0.0/radiation/{z}/{x}/{y}.grid.json']
+            };
+            var pastIdTiles = {
+                tilejson: "1.0.0",
+                scheme: "tms",
+                template: "{{#__location__}}{{/__location__}}{{#__teaser__}}{{{id}}} {{{type}}}{{/__teaser__}}{{#__full__}}{{/__full__}}", 
+                tiles: ["http://localhost:8000/static/past_id/1.0.0/radiation/{z}/{x}/{y}.png"],
+                grids: ['http://localhost:8000/static/past_id/1.0.0/radiation/{z}/{x}/{y}.grid.json']
+            };
+            var curHighlight = null;
+            var clickCallback = function(data){
+
+            };
+            var hoverCallback = function(data){
+
+            };
+            $(document).ready(function(){
+                $("#map-info-container").css("height", $(document).height() + 'px');
+                $("#map-info-container").css("width", $(document).width() + 'px');
+                
+                var map = new L.Map("map", {scrollWheelZoom: false,
+                    zoomControl: true, dragging: true, doubleClickZoom: true,
+                    minZoom:13, maxZoom: 18, attributionControl: false
+                });
+                var center = new L.LatLng(37.822802,-122.370106);
+                var base = new LayerInteraction(baseTiles, map, 0);
+                LayerInteraction.objects['ir'] = new LayerInteraction(irTiles, map, 1, hoverCallback, clickCallback);
+                LayerInteraction.objects['newId'] = new LayerInteraction(newIdTiles, map, 2, hoverCallback, clickCallback);
+                LayerInteraction.objects['pastId'] = new LayerInteraction(pastIdTiles, map, 3, hoverCallback, clickCallback);
+                map.setView(center, 14);
+
+                var layerToggler = function(e){
+                    var target = e.srcElement || e.target;
+                    var id = $(target).attr('id');
+                    var obj = LayerInteraction.objects[id];
+                    if(obj.hidden){
+                        obj.setHidden();
+                        LayerInteraction.redrawVisibleLayers();
+                    }else{
+                        obj.hide();
+                    }
+                };
+                $("#controls a").unbind('click', layerToggler).bind('click', layerToggler);
+            });
+        </script>
+    </head>
+    <body>
+        <div id="controls">
+            <a href="#" id="ir" class="visible-layer"><span>Hide</span> Irradiated Locations</a>
+            <a href="#" id="newId" class="visible-layer"><span>Hide</span> Newly Identified Locations Locations</a>
+            <a href="#" id="pastId" class="visible-layer"><span>Hide</span> Previously Identified Locations</a>
+        </div>
+        <div id="map-info-container">
+            <div id="info"></div>
+            <div id="map"></div>
+        </div>
+    </body>
+</html>
+
